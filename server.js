@@ -1,7 +1,9 @@
 // server.js
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const Review = require('./reviews');
 
 const app = express();
 const port = 3003;
@@ -20,9 +22,30 @@ connection.once('open', () => {
   console.log('Connected to MongoDB database');
 });
 
+// Middleware to parse JSON
+app.use(express.json());
+
 // Routes
-const exampleRouter = require('./routes/example');
-app.use('/api/example', exampleRouter);
+app.get('/api/reviews', (req, res) => {
+  Review.find()
+    .then((reviews) => res.json(reviews))
+    .catch((error) => res.status(400).json('Error: ' + error));
+});
+
+app.post('/api/reviews', (req, res) => {
+  const { title, description, rating } = req.body;
+
+  const newReview = new Review({
+    title,
+    description,
+    rating,
+  });
+
+  newReview
+    .save()
+    .then(() => res.json('Review added successfully'))
+    .catch((error) => res.status(400).json('Error: ' + error));
+});
 
 // Serve static files
 app.use(express.static('nevada/build'));
@@ -35,4 +58,3 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-
